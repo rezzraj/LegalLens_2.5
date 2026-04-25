@@ -5,12 +5,77 @@ import torch
 import kagglehub
 import json
 import numpy as np
-from embedding_gemma import embed_query, model1
 import re
+from google import genai
+from embedding_gemma import embedding_text
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 
+api_key = os.environ["GEMINI_API_KEY"]
+client = genai.Client(api_key=api_key)
 
+def generate_legal_answer(question, context):
+    prompt = f"""
+You are LegalLens, a legal Q&A assistant for the Information Technology Act, 2000.
+
+Rules:
+1. Answer ONLY using the provided context.
+2. Do NOT invent sections.
+3. If the context contains related sections, explain them.
+4. Only say "I could not find this in the provided IT Act context." if the context is empty or completely unrelated.
+5. Keep answer simple and clear.
+6. Mention the section names that are present in the context.
+
+Context:
+{context}
+
+User question:
+{question}
+"""
+
+    models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"]
+
+    for model_name in models:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            )
+            return response.text
+
+        except Exception as e:
+            print(f"{model_name} failed:", e)
+
+    return "Gemini quota is exhausted right now. Please try again later."
+
+
+def casual_answer(question):
+    prompt = f"""
+You are LegalLens, a legal Q&A assistant for the Information Technology Act, 2000.
+if user asks a question that is not relevant to the IT Act, answer in a casual, friendly way without mentioning legal stuff.
+
+User Question:
+{question}
+
+"""
+
+    models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"]
+
+    for model_name in models:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt
+            )
+            return response.text
+
+        except Exception as e:
+            print(f"{model_name} failed:", e)
+
+    return "Gemini quota is exhausted right now. Please try again later."
+
+"""
 # Point Python to the cloned repo root
 sys.path.append(os.path.join(os.path.dirname(__file__), "gemma_pytorch"))
 
@@ -64,12 +129,13 @@ with _set_default_tensor_type(model_config.get_dtype()):
     model = model.to(device).eval()
 
 print("Model loading done.")
+"""
 
 
 with open("sections_with_ques.json", "r", encoding="utf-8") as f:
     sections_meta = json.load(f)
 
-embeddings = np.load("embeddings_with_ques.npy")
+embeddings = np.load("embeddings_with_ques(FLASH).npy")
 for key, item in sections_meta.items():
     sec = item.get("section", "") or ""
     match = re.match(r"^\s*(\d+[A-Za-z]?)\.", sec)
@@ -80,14 +146,15 @@ def extract_section_ids(query):
     return re.findall(r"section\s*(\d+[a-z]?)", query.lower())
 
 
-
+"""
 # Gemma chat formatting
 USER_CHAT_TEMPLATE = "<start_of_turn>user\n{prompt}<end_of_turn><eos>\n"
 MODEL_CHAT_TEMPLATE = "<start_of_turn>model\n"
 
 
+
 def questions_generator(query):
-    user_turn = USER_CHAT_TEMPLATE.format(prompt=f"""You are generating retrieval queries for a legal RAG system.
+    user_turn = USER_CHAT_TEMPLATE.format(prompt=fYou are generating retrieval queries for a legal RAG system.
 
 You will be given exactly ONE section text from the Information Technology Act, 2000.
 
@@ -149,7 +216,7 @@ Now generate queries for this section.
 Section text:
 {query}
 
-Queries: """)
+Queries: )
 
     full_prompt = user_turn + MODEL_CHAT_TEMPLATE
 
@@ -172,7 +239,7 @@ Queries: """)
 
 
 def query_expander(query):
-    user_turn = USER_CHAT_TEMPLATE.format(prompt=f"""Convert the user’s legal question into a short keyword-only search query for finding relevant sections in the IT Act.  
+    user_turn = USER_CHAT_TEMPLATE.format(prompt=fConvert the user’s legal question into a short keyword-only search query for finding relevant sections in the IT Act.  
   
 Rules:  
   
@@ -234,7 +301,7 @@ Now process the user input below:
 User:  
 {query}  
   
-Keywords: """)
+Keywords: )
 
 
     full_prompt = user_turn + MODEL_CHAT_TEMPLATE
@@ -252,138 +319,115 @@ Keywords: """)
         )
     return  output.split("<end_of_turn>")[0].strip()
 
-
+"""
 
 
 
 def model_generate(x):
 
+    if x == "exit":
+        return "bye"
 
-    while True:
+    casual_responses = {
+        "thanks": "You're welcome!",
+        "thank you": "You're welcome!",
+        "hi": "Hello!",
+        "hello": "Hello!",
+        "ok": "Alright!",
+        "okay": "Alright!",
+        "hey": "Hi!",
+        "bye": "Goodbye!",
+        "goodbye": "Goodbye!",
+        "your amazing": "Glad to help you!",
+        "wow": "glad you liked the answer!",
+        "who are you" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act, I was created by Akshit Raj.",
+        "what do you do"  : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
+        "how can you help me?" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
+        "what can you do" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
+        "what ques can you answer" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
+        "who created you?": "i was created by Akshit Raj",
+        "who created you": "i was created by Akshit Raj",
+        "who built you": "i was created by Akshit Raj",
+        "who is akshit raj": "he is a second year student in niit university",
+        "how can you help me": "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
+        "what can you help me with": "i can help you on the Information and Technology ACT, 2000. I can answer questions related to the act, or to simplify just ask me about the digital law ",
+        "wassup": "Hey! 👋",
+        "wasshup": "Hey! 👋",
+        "sup": "Hey! 👋",
+        "yo": "Hey! 👋",
+        "bro": "😂 what's up bro",
+        "whats up?": "All good, how can i help you?",
+    }
 
-
-        if x == "exit":
-            break
-
-        casual_responses = {
-            "thanks": "You're welcome!",
-            "thank you": "You're welcome!",
-            "hi": "Hello!",
-            "hello": "Hello!",
-            "ok": "Alright!",
-            "okay": "Alright!",
-            "hey": "Hi!",
-            "bye": "Goodbye!",
-            "goodbye": "Goodbye!",
-            "your amazing": "Glad to help you!",
-            "wow": "glad you liked the answer!",
-            "who are you" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act, I was created by Akshit Raj.",
-            "what do you do"  : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
-            "how can you help me?" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
-            "what can you do" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
-            "what ques can you answer" : "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
-            "who created you?": "i was created by Akshit Raj",
-            "who created you": "i was created by Akshit Raj",
-            "who built you": "i was created by Akshit Raj",
-            "who is akshit raj": "he is a second year student in niit university",
-            "how can you help me": "I am a chat bot trained on the Information and Technology ACT, 2000. I can answer questions related to the act.",
-            "what can you help me with": "i can help you on the Information and Technology ACT, 2000. I can answer questions related to the act, or to simplify just ask me about the digital law ",
-            "wassup": "Hey! 👋",
-            "wasshup": "Hey! 👋",
-            "sup": "Hey! 👋",
-            "yo": "Hey! 👋",
-            "bro": "😂 what's up bro",
-            "whats up?": "All good, how can i help you?",
-        }
-
-        if x.lower().strip() in casual_responses:
-            return casual_responses[x.lower().strip()]
+    if x.lower().strip() in casual_responses:
+        return casual_responses[x.lower().strip()]
 
 
 
+    top_3_sections = ""
+    section_name_list = []
 
+    section_ids = extract_section_ids(x)
+    found_exact_match = False
 
-
-
-
-
-        top_3_sections = ""
-        section_name_list = []
-
-        section_ids = extract_section_ids(x)
-        found_exact_match = False
-
-        if section_ids:
-            for i in section_ids:
-                for key, item in sections_meta.items():
-                    if item.get("section_id") == i:
-                        found_exact_match = True
-                        chapter_name = sections_meta[key].get("chapter") or "Unknown Chapter"
-                        section_name = sections_meta[key].get("section") or "Unknown Section"
-                        section_text = sections_meta[key].get("text") or ""
-                        print(section_name or "Unknown Section")
-                        section_name_list.append(section_name)
-
-                        top_3_sections += "this section is from chapter no: " + chapter_name + "\n"
-                        top_3_sections += "this section name is: " + section_name + "\n"
-                        top_3_sections += "this is the section content: " + section_text + "\n"
-                        break
-            if not found_exact_match:
-                return "I could not find that section in the Information Technology Act, 2000."
-
-
-
-
-        else:
-
-            search_query = x
-            print(search_query)
-            input_embedding = embed_query(search_query)
-            embeddings_similarity = {}
-            for i, emb in enumerate(embeddings):
-                embeddings_similarity[i] = model1.similarity(input_embedding, emb)
-
-            sorted_sim = dict(sorted(embeddings_similarity.items(), key=lambda p: p[1], reverse=True))
-            top_score = float(list(sorted_sim.values())[0])
-            if top_score < 0.4:
-                user_turn1 = USER_CHAT_TEMPLATE.format(prompt=f"""{x}""")
-
-
-                full_prompt = user_turn1 + MODEL_CHAT_TEMPLATE
-
-                print("\nGenerating...\n")
-
-                with torch.no_grad():
-                    output = model.generate(
-                        full_prompt,
-                        device=device,
-                        output_len=100,
-                        temperature=0.4,
-                        top_p=0.95,
-                        top_k=64,
-                    )
-                output = output.split("<end_of_turn>")[0].strip()
-
-                warning_message = "Not relevant to IT act or Low confidence from model"
-
-                return warning_message + "\n\n" + output
-
-            for i, (idx, score) in enumerate(sorted_sim.items()):
-                if i < 3:
-                    chapter_name = sections_meta[str(idx)].get("chapter") or "Unknown Chapter"
-                    section_name = sections_meta[str(idx)].get("section") or "Unknown Section"
-                    section_questions=sections_meta[str(idx)].get("questions") or "No questions available"
-                    section_text = sections_meta[str(idx)].get("text") or ""
+    if section_ids:
+        for i in section_ids:
+            for key, item in sections_meta.items():
+                if item.get("section_id") == i:
+                    found_exact_match = True
+                    chapter_name = sections_meta[key].get("chapter") or "Unknown Chapter"
+                    section_name = sections_meta[key].get("section") or "Unknown Section"
+                    section_text = sections_meta[key].get("text") or ""
                     print(section_name or "Unknown Section")
                     section_name_list.append(section_name)
-
 
                     top_3_sections += "this section is from chapter no: " + chapter_name + "\n"
                     top_3_sections += "this section name is: " + section_name + "\n"
                     top_3_sections += "this is the section content: " + section_text + "\n"
-
-                else:
                     break
+        if not found_exact_match:
+            return "I could not find that section in the Information Technology Act, 2000."
+
+
+
+
+    else:
+
+        search_query = x
+        print(search_query)
+        input_embedding = embedding_text(search_query)
+        embeddings_similarity = {}
+        input_embedding = np.array(input_embedding, dtype=np.float32)
+        for i, emb in enumerate(embeddings):
+            emb = np.array(emb, dtype=np.float32)
+            embeddings_similarity[i] = cosine_similarity(input_embedding.reshape(1, -1),emb.reshape(1, -1))[0][0]
+
+        sorted_sim = dict(sorted(embeddings_similarity.items(), key=lambda p: p[1], reverse=True))
+        top_score = float(list(sorted_sim.values())[0])
+        print(top_score)
+        if top_score < 0.55:
+            output=casual_answer(x)
+
+            warning_message = "Not relevant to IT act or Low confidence from model"
+
+            return warning_message + "\n\n" + output
+
+        for i, (idx, score) in enumerate(sorted_sim.items()):
+            if i < 3:
+                chapter_name = sections_meta[str(idx)].get("chapter") or "Unknown Chapter"
+                section_name = sections_meta[str(idx)].get("section") or "Unknown Section"
+                section_questions=sections_meta[str(idx)].get("questions") or "No questions available"
+                section_text = sections_meta[str(idx)].get("text") or ""
+                print(section_name or "Unknown Section")
+                section_name_list.append(section_name)
+
+
+                top_3_sections += "this section is from chapter no: " + chapter_name + "\n"
+                top_3_sections += "this section name is: " + section_name + "\n"
+                top_3_sections += "this is the section content: " + section_text + "\n"
+
+            else:
+                break
 
 
 
@@ -393,37 +437,17 @@ def model_generate(x):
 
 
 
-        user_turn = USER_CHAT_TEMPLATE.format(prompt=f""" you are answering questions related to the information and technology act 2000
-Answer only from the context below.
-Do not define any term unless the definition is clearly written in the context.   
-Do not add examples, categories, or meanings that are not explicitly supported by the context.
-if user asks you to explain any section, for example "explain section 12" then u must explain the section in summarized form based on context and is easy to read ..
-Context:
-{top_3_sections}
 
-answer the question below
-Question: {x}""")
+    try :
+        output = generate_legal_answer(x, top_3_sections)
 
+        j = [v for v in section_name_list]
 
+        return output + "\n\n", j
+    except Exception as e:
+        print("Error during answer generation:", str(e))
+        return "Sorry, I encountered an error while generating the answer. Please try again later.(probably due to high demand)"
 
-        full_prompt = user_turn + MODEL_CHAT_TEMPLATE
-
-        print("\nGenerating...\n")
-
-        with torch.no_grad():
-            output = model.generate(
-                full_prompt,
-                device=device,
-                output_len=270,
-                temperature=0.1,
-                top_p=0.95,
-                top_k=64,
-            )
-        output = output.split("<end_of_turn>")[0].strip() +"\n" +"sections from the search :"
-
-        j=[v for v in section_name_list]
-
-        return output + "\n\n" , j
 
 
 if __name__ == "__main__":

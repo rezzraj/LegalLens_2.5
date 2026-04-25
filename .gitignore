@@ -1,5 +1,9 @@
 model/
 .venv/
 gemma-3-1b-it/
-Dockerfile
 model_emb/
+embeddings.npy
+embeddings_with_ques.npy
+gemma_3.py
+gemma_pytorch/
+
