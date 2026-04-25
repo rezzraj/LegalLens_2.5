@@ -1,6 +1,5 @@
-import sys
+
 import os
-import torch
 from google import genai
 
 api_key = os.environ["GEMINI_API_KEY"]
