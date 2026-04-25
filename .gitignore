@@ -8,3 +8,41 @@ gemma_3.py
 gemma_pytorch/
 .idea/
 
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+
+# Node / React
+node_modules/
+dist/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Large model/data files if any
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.safetensors

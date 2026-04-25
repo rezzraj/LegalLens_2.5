@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #000000;
+  color: #e5e7eb;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.glass {
+  background: rgba(15, 23, 42, 0.68);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  backdrop-filter: blur(22px);
+}
+
+.noise {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.14), transparent 28%),
+    radial-gradient(circle at 80% 25%, rgba(255, 255, 255, 0.055), transparent 30%),
+    radial-gradient(circle at 50% 85%, rgba(245, 158, 11, 0.1), transparent 35%);
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(245, 158, 11, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.075) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 1;
+  mask-image: linear-gradient(to bottom, black 0%, black 75%, transparent 100%);
+}
+
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+}

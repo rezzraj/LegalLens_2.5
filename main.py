@@ -47,7 +47,7 @@ User question:
         except Exception as e:
             print(f"{model_name} failed:", e)
 
-    return "Gemini quota is exhausted right now. Please try again later."
+    return "AI request limit has been reached. Please try again later."
 
 
 def casual_answer(question):
@@ -443,7 +443,7 @@ def model_generate(x):
 
         j = [v for v in section_name_list]
 
-        return output + "\n\n", j
+        return output
     except Exception as e:
         print("Error during answer generation:", str(e))
         return "Sorry, I encountered an error while generating the answer. Please try again later.(probably due to high demand)"
