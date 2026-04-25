@@ -6,4 +6,5 @@ embeddings.npy
 embeddings_with_ques.npy
 gemma_3.py
 gemma_pytorch/
+.idea/
 
