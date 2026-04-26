@@ -9,7 +9,7 @@ client = genai.Client(api_key=api_key)
 MODEL = "gemini-embedding-001"
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 

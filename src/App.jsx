@@ -40,7 +40,7 @@ function EmptyState({ setQuestion }) {
   const examples = [
     {
       title: "Explain a section",
-      text: "Explain Section 66 of the IT Act.",
+      text: "Explain Section 58 of the IT Act.",
       icon: FileSearch
     },
     {

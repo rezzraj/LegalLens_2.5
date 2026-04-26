@@ -11,3 +11,10 @@ __pycache__/
 *.pth
 *.bin
 *.safetensors
+text_extraction.py
+questions_generator.py
+sections_with_ques.json
+it_act_2000_updated.pdf
+it_act_2000_updated____trimmed.pdf
+Dockerfile
+gemma_pytorch/
