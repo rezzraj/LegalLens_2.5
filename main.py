@@ -4,8 +4,26 @@ import numpy as np
 import re
 from google import genai
 from embedding_gemma import embedding_text
-from sklearn.metrics.pairwise import cosine_similarity
 
+
+
+def cosine_similarity(a, b):
+    a = np.asarray(a, dtype=np.float64)
+    b = np.asarray(b, dtype=np.float64)
+
+    dot_product = np.dot(a, b.T)
+
+    a_norm = np.linalg.norm(a, axis=1, keepdims=True)
+    b_norm = np.linalg.norm(b, axis=1, keepdims=True)
+
+    denominator = a_norm * b_norm.T
+
+    return np.divide(
+        dot_product,
+        denominator,
+        out=np.zeros_like(dot_product),
+        where=denominator != 0
+    )
 
 
 api_key = os.environ["GEMINI_API_KEY"]

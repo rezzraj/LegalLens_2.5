@@ -18,3 +18,4 @@ it_act_2000_updated.pdf
 it_act_2000_updated____trimmed.pdf
 Dockerfile
 gemma_pytorch/
+__pycache__/
