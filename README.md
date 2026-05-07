@@ -1,8 +1,6 @@
 # LegalLens
 
 ![My project image](image.png)
-![My project image2](image(1).png)
-![My project image3](image(2).png)
 
 ## Live Demo
 
